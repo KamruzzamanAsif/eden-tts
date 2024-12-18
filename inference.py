@@ -115,7 +115,8 @@ def m_inference(tts_model, out_path, texts):
         
         # Griffin-Lim Audio Generation
         log.info("Generating Griffin-Lim audio...")
-        mel_pred_np = mel_pred.squeeze(0).cpu().numpy()  # [n_mels, time_steps]
+        mel_pred_np = mel_pred.squeeze(0).cpu().numpy()  # Shape: [time_steps, n_mels]
+        mel_pred_np = mel_pred_np.T  # Transpose to [n_mels, time_steps]
         try:
             spectrogram = mel_to_linear(mel_pred_np)  # Convert mel to linear spectrogram
             
