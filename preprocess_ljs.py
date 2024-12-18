@@ -100,6 +100,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("-n", "--n_workers", type=int, default=4)
     args = parser.parse_args()
-    args.wav_path = r"G:\dataset\LJSpeech\LJSpeech-1.1"
+    # args.wav_path = r"G:\dataset\LJSpeech\LJSpeech-1.1"
     main(args.wav_path, n_workers=args.n_workers)
 

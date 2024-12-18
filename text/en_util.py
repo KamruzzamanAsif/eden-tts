@@ -66,7 +66,7 @@ def get_phonemes(text):
     return phones
 
 
-def text_to_sequence(text, cleaner_names=["english_cleaners"], token_type="char"):
+def text_to_sequence(text, cleaner_names=["transliteration_cleaners"], token_type="char"):
     """Converts a string of text to a sequence of IDs corresponding to the symbols in the text.
 
     The text can optionally have ARPAbet sequences enclosed in curly braces embedded
