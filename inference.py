@@ -58,7 +58,7 @@ def mel_to_linear(mel_spectrogram, sr=22050, n_fft=1024, n_mels=80, fmin=0.0, fm
         fmin (float): Minimum frequency.
         fmax (float): Maximum frequency.
     Returns:
-        numpy.ndarray: Linear spectrogram.
+        numpy.ndarray: Linear spectrogram (shape: [freq_bins, time_steps]).
     """
     if fmax is None:
         fmax = sr // 2
@@ -66,17 +66,14 @@ def mel_to_linear(mel_spectrogram, sr=22050, n_fft=1024, n_mels=80, fmin=0.0, fm
     # Create a mel filter bank
     mel_filter = librosa.filters.mel(sr=sr, n_fft=n_fft, n_mels=n_mels, fmin=fmin, fmax=fmax)
     
-    # Pseudo-inverse of the mel filter bank
-    mel_filter_inv = np.linalg.pinv(mel_filter)
-    
-    # Transpose mel_spectrogram to align time_steps with columns
-    mel_spectrogram = mel_spectrogram.T  # Now shape is [time_steps, n_mels]
+    # Compute pseudo-inverse of the mel filter bank
+    mel_filter_inv = np.linalg.pinv(mel_filter)  # Shape: [freq_bins, n_mels]
     
     # Convert mel-spectrogram to linear spectrogram
-    linear_spectrogram = np.dot(mel_spectrogram, mel_filter_inv.T)  # Align dimensions
+    linear_spectrogram = np.dot(mel_filter_inv, mel_spectrogram)  # Align dimensions
     linear_spectrogram = np.maximum(0.0, linear_spectrogram)  # Avoid negative values
 
-    return linear_spectrogram.T  # Transpose back to [freq_bins, time_steps]
+    return linear_spectrogram  # Shape: [freq_bins, time_steps]
 
 
 
