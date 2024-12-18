@@ -34,6 +34,7 @@ def m_inference(tts_model, out_path, texts):
         s1 = time.time()
         mel_pred = tts_model.inference(phones)
         log.info(f"acoustic model inferance time {time.time() - s1}s")
+        log.info(f"predicted mel spectrum: {mel_pred}")
         with torch.no_grad():
             audio = vocoder(mel_pred.transpose(1, 2))
         file = os.path.join(out_path, f'{text[:40]}.wav')
