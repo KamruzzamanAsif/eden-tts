@@ -16,7 +16,7 @@ class Hparams(object):
         # pretrained hifigan vocoder can be downloaded from: https://drive.google.com/drive/folders/1-eEYTB5Av9jNql0WGBlRoi-WH2J7bp5Y
         # we use the model LJ_FT_T2_V1 in the article
         self.voc_path = "path/to/hifigan_vocoder"
-        self.voc_path = r"C:\Users\home\Desktop\hifigan\pretrained\lj_wo_ft.pth.tar"
+        self.voc_path = r"/content/LJ_FT_T2_V1"
         self.vocab_size = 365  # number of input tokens
         # Training
         self.tts_max_steps = 10_000  # you may stop at around 100_000 for ljspeech dataset for acceptable speech quality
