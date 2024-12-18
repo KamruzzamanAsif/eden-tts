@@ -26,23 +26,66 @@ log = get_logger(__name__)
 vocoder.to(device)
 
 
+# def m_inference(tts_model, out_path, texts):
+#     for text in texts:
+#         log.info(f"processing text: {text}")
+#         phones = text_to_sequence(text)
+#         phones = torch.tensor(phones).long().unsqueeze(0).to(device)
+#         s1 = time.time()
+#         mel_pred = tts_model.inference(phones)
+#         log.info(f"acoustic model inferance time {time.time() - s1}s")
+#         log.info(f"predicted mel spectrum: {mel_pred}")
+#         with torch.no_grad():
+#             audio = vocoder(mel_pred.transpose(1, 2))
+#         file = os.path.join(out_path, f'{text[:40]}.wav')
+#         wav = audio.squeeze().cpu().detach().numpy()
+#         peak = np.abs(wav).max()
+#         wav = wav / peak
+#         save_wav(wav, file)
+#         log.info(f"Synthesized wave saved at: {file}")
+
+
 def m_inference(tts_model, out_path, texts):
     for text in texts:
-        log.info(f"processing text: {text}")
+        log.info(f"Processing text: {text}")
         phones = text_to_sequence(text)
         phones = torch.tensor(phones).long().unsqueeze(0).to(device)
+        
+        # Acoustic Model Inference
         s1 = time.time()
         mel_pred = tts_model.inference(phones)
-        log.info(f"acoustic model inferance time {time.time() - s1}s")
-        log.info(f"predicted mel spectrum: {mel_pred}")
+        log.info(f"Acoustic model inference time: {time.time() - s1}s")
+        log.info(f"Predicted mel spectrum: {mel_pred}")
+        
+        # HiFi-GAN Vocoder Audio Generation
         with torch.no_grad():
-            audio = vocoder(mel_pred.transpose(1, 2))
-        file = os.path.join(out_path, f'{text[:40]}.wav')
-        wav = audio.squeeze().cpu().detach().numpy()
-        peak = np.abs(wav).max()
-        wav = wav / peak
-        save_wav(wav, file)
-        log.info(f"Synthesized wave saved at: {file}")
+            audio_hifigan = vocoder(mel_pred.transpose(1, 2))  # HiFi-GAN expects [B, C, T]
+        wav_hifigan = audio_hifigan.squeeze().cpu().detach().numpy()
+        wav_hifigan = wav_hifigan / np.abs(wav_hifigan).max()  # Normalize
+        
+        # Save HiFi-GAN Output
+        file_hifigan = os.path.join(out_path, f'{text[:40]}_hifigan.wav')
+        save_wav(wav_hifigan, file_hifigan)
+        log.info(f"Synthesized wave (HiFi-GAN) saved at: {file_hifigan}")
+        
+        # Griffin-Lim Audio Generation
+        log.info("Generating Griffin-Lim audio...")
+        mel_pred_np = mel_pred.squeeze(0).cpu().numpy()  # [T, C]
+        spectrogram = mel_to_linear(mel_pred_np)  # Convert mel to linear spectrogram
+        
+        wav_griffinlim = librosa.griffinlim(
+            spectrogram,
+            hop_length=256,  # Adjust these parameters based on your setup
+            win_length=1024,
+            n_iter=60  # Number of iterations for phase reconstruction
+        )
+        wav_griffinlim = wav_griffinlim / np.abs(wav_griffinlim).max()  # Normalize
+        
+        # Save Griffin-Lim Output
+        file_griffinlim = os.path.join(out_path, f'{text[:40]}_griffinlim.wav')
+        save_wav(wav_griffinlim, file_griffinlim)
+        log.info(f"Synthesized wave (Griffin-Lim) saved at: {file_griffinlim}")
+
 
 
 def inference(texts):
