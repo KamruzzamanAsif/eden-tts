@@ -9,6 +9,7 @@ from models.edenTTS import EdenTTS
 from hparams import hparams as hp
 from utils.paths import Paths
 import torch
+import numpy as np
 
 import time
 from utils.dsp import save_wav
@@ -43,6 +44,35 @@ vocoder.to(device)
 #         wav = wav / peak
 #         save_wav(wav, file)
 #         log.info(f"Synthesized wave saved at: {file}")
+
+
+def mel_to_linear(mel_spectrogram, sr=22050, n_fft=1024, n_mels=80, fmin=0.0, fmax=None):
+    """
+    Converts a mel-spectrogram back to a linear spectrogram.
+    Args:
+        mel_spectrogram (numpy.ndarray): Input mel-spectrogram.
+        sr (int): Sampling rate.
+        n_fft (int): Number of FFT components.
+        n_mels (int): Number of mel bands.
+        fmin (float): Minimum frequency.
+        fmax (float): Maximum frequency.
+    Returns:
+        numpy.ndarray: Linear spectrogram.
+    """
+    if fmax is None:
+        fmax = sr // 2
+
+    # Create a mel filter bank
+    mel_filter = librosa.filters.mel(sr=sr, n_fft=n_fft, n_mels=n_mels, fmin=fmin, fmax=fmax)
+    
+    # Pseudo-inverse of the mel filter bank
+    mel_filter_inv = np.linalg.pinv(mel_filter)
+    
+    # Convert mel-spectrogram to linear spectrogram
+    linear_spectrogram = np.dot(mel_filter_inv, mel_spectrogram)
+    linear_spectrogram = np.maximum(0.0, linear_spectrogram)  # Avoid negative values
+
+    return linear_spectrogram
 
 
 def m_inference(tts_model, out_path, texts):
