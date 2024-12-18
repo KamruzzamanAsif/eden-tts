@@ -65,13 +65,22 @@ def mel_to_linear(mel_spectrogram, sr=22050, n_fft=1024, n_mels=80, fmin=0.0, fm
 
     # Create a mel filter bank
     mel_filter = librosa.filters.mel(sr=sr, n_fft=n_fft, n_mels=n_mels, fmin=fmin, fmax=fmax)
-    
+    log.info(f"Mel filter shape: {mel_filter.shape}")
+
     # Compute pseudo-inverse of the mel filter bank
     mel_filter_inv = np.linalg.pinv(mel_filter)  # Shape: [freq_bins, n_mels]
-    
+    log.info(f"Mel filter pseudo-inverse shape: {mel_filter_inv.shape}")
+
     # Convert mel-spectrogram to linear spectrogram
+    # Ensure mel_spectrogram shape is correct
+    if mel_spectrogram.shape[0] != n_mels:
+        raise ValueError(f"Expected mel_spectrogram shape [n_mels, time_steps], but got {mel_spectrogram.shape}")
+
     linear_spectrogram = np.dot(mel_filter_inv, mel_spectrogram)  # Align dimensions
-    linear_spectrogram = np.maximum(0.0, linear_spectrogram)  # Avoid negative values
+    log.info(f"Linear spectrogram shape: {linear_spectrogram.shape}")
+
+    # Avoid negative values in the spectrogram
+    linear_spectrogram = np.maximum(0.0, linear_spectrogram)
 
     return linear_spectrogram  # Shape: [freq_bins, time_steps]
 
